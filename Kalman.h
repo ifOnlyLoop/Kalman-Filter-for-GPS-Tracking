@@ -28,12 +28,14 @@ class Kalman{
 
 private:
 
-    int i,n; // number of samples/readings
+    int i=1,n; // number of samples/readings (redundunt)
 
     double
-            dt,  // time step/slot
-            x,y,vx,vy,ax,ay, // GPS,Speed,Acce
-            xVar,yVar,vxVar,vyVar; // Error
+            
+           a,dt,ti,x,y,v0,v,TH; // GPS,Speed,Acce
+    
+    vector<double> vec;
+            
 
     /*
      * Our state space model taken from motion equations
@@ -65,7 +67,7 @@ private:
     Matrix<double,4,4> R; // covariance of observation noise
     Matrix<double,4,4> Q; // covariance of process(algorthem) noise
     Matrix<double,4,1> Z ; // covariance of observation(measuremnt) error
-    //Matrix<double,4,1> W ; // covariance of prediction error
+  //Matrix<double,4,1> W ; // covariance of prediction error
 
     /*
      * Statistics (for future use)
@@ -78,54 +80,63 @@ protected:
     
 public:
     // constructor
-    Kalman();
+    Kalman(double &t0,double &GPSguess,double &vguess,
+           double &gpsVar,double &vVar);
     // next estimation
-    void handleUpdate();
+    vector<double> handleUpdate(double& t, double& x,double& y,
+                                    double& vx,double& vy,
+                                    double& ax,double& ay);
 
 };
 
 
 
-Kalman::Kalman(){
-
-    // read parameters
-    cin>>dt;
-    // initialize the states and input coefficients matrix
-    A << 1,0,dt,0, 0,1,0,dt, 0,0,1,0, 0,0,0,1;
-    B << 0.5*dt*dt,0, 0,0.5*dt*dt, dt,0, 0,dt;
-
-    // input the parameters of error/noise model
-    cin>>xVar>>yVar>>vxVar>>vyVar;
-
-    // initialize errors coefficients matrix
-    R <<    xVar*xVar,     0,0,0,
-         0,   yVar*yVar,     0,0,
-         0,0,   vxVar*vxVar,   0,
-         0,0,0,   vyVar*vyVar;
-    Q <<    xVar*xVar,  0,xVar*vxVar,  0,
-         0,   yVar*yVar,  0,yVar*vyVar,
-         0,0,   vxVar*vxVar,0,
-         0,0,0,   vyVar*vyVar;
-    H << 1,0,0,0, 0,1,0,0;
+Kalman::Kalman(double &t0,double &GPSguess,double &vguess,
+               double &gpsVar,double &vVar){
     
-    Z.setRandom();
-    Z*=0.1;
-
+    X<<GPSguess,GPSguess,vguess,vguess;
+    ti=t0;
+    // initialize the states and input coefficients matrix
+    A << 1,0,t0,0, 0,1,0,t0, 0,0,1,0, 0,0,0,1;
+    B << 0.5*t0*t0,0, 0,0.5*t0*t0, t0,0, 0,t0;
+    // errors coefficients matrix
+    R << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
+    P << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
     K= Matrix<double,4,4>::Zero();
-    P<< 6.25,0,0,0, 0,6.25,0,0, 0,0,1,0, 0,0,0,1;
-    handleUpdate();
+    // noise model
+    Z.setRandom();
+    Q.setRandom();
+    Z*=0.1;
+    Q*=0.1;
 
 }
 
-void Kalman::handleUpdate(){
+vector<double> Kalman::handleUpdate(double& t, 
+                                    double& x,double& y,
+                                    double& vx,double& vy,
+                                    double& ax,double& ay){
 
     /*
      * kalman filter algo goes here
      */
-    cin>>x>>y>>vx>>vy>>ax>>ay>>n;
-    X<<x,y,vx,vy; U<<ax,ay;
-    // iterate here
-    while(n--){
+
+    // fill A,B if dt changes
+    if(dt!=(t-ti)){ // if the new interval equal the old why update A,B
+    dt=t-ti; ti=t;                             // get the new interval
+    A << 1,0,dt,0, 0,1,0,dt, 0,0,1,0, 0,0,0,1; // update A matrix
+    B << 0.5*dt*dt,0, 0,0.5*dt*dt, dt,0, 0,dt; // update B matrix
+    }
+
+    /*
+     * update measurement + input 
+     */
+    Xm<<x,y,vx,vy;  // fill the new measurement data
+    U<<ax,ay;       // save a as vectorized input
+
+
+    /*
+     * kalman algo starts here
+     */ 
         // predicted state X(i)=A*X(i-1)+B*U(i)+W;
         Xp=A*X+B*U/*+W*/;
         // predicted covariance P(i)=A*X(i-1)P^(-1)+Q;
@@ -139,16 +150,13 @@ void Kalman::handleUpdate(){
         // update covariance
         P=(Matrix<double,4,4>::Identity()-K)*P;
         // display result
-        cout<<X<<"\n\n";/*<<P<<"\n\n"<<K<<"\n\n"*/;
+        // clear vec 
+        vec.clear();
+        vec={X(1,1),X(2,1),X(3,1),X(4,1)};
+        return vec;
         // next iteration for Xm,U
-        cin>>x>>y>>vx>>vy>>ax>>ay;
-        Xm<<x,y,vx,vy; U<<ax,ay;
-
-    }
-
-    fclose (stdin); // stop readings data from in.txt
-    return;
 }
+
 
 
 
