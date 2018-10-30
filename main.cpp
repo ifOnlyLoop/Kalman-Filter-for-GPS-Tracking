@@ -12,11 +12,22 @@ using namespace std;
 
 int main()
 {
+  int n;
+  double t0,GPSguess,vguess,gpsVar,vVar,
+         t,x,y,vx,vy,ax,ay;
+  
   freopen("in.txt", "r", stdin);
+  freopen("out.txt", "w", stdout);
+ 
+  cin>>t0>>x0>>y0>>v0>>gpsVar>>vVar>>n;
+  Kalman why(t0,GPSguess,vguess,gpsVar,vVar);
+  t=0;
+  
+  while(n--){
+  cin>>x>>y>>v>>TH;
+  why.handleUpdate(t,x,y,vx,vy,ax,ay);
+  }
 
-
-    //freopen("in.txt", "r", stdin);
-    freopen("out.txt", "w", stdout);
-    Kalman why;
-
+  fclose (stdin);  // stop reading data from in.txt
+  fclose (stdout); // stop writing data from out.txt
 }
