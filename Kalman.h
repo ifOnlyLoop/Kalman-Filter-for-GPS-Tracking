@@ -32,7 +32,7 @@ private:
 
     double
             
-           a,dt,ti,x,y,v0,v,TH; // GPS,Speed,Acce
+           a,dt=-1/*time can't be neg- thus will always enter if (line 124)*/,ti,x,y,v0,v,TH; // GPS,Speed,Acce
     
     vector<double> vec;
             
