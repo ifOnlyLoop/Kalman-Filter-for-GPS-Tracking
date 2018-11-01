@@ -152,7 +152,7 @@ vector<double> Kalman::handleUpdate(double& t,
         // display result
         // clear vec 
         vec.clear();
-        vec={X(1,1),X(2,1),X(3,1),X(4,1)};
+        vec={X(0,0),X(1,0),X(2,0),X(3,0)};
         return vec;
         // next iteration for Xm,U
 }
