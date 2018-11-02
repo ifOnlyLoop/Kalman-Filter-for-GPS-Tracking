@@ -79,19 +79,24 @@ private:
 protected:
     
 public:
-    // constructor
-    Kalman(double &t0,double &GPSguess,double &vguess,
-           double &gpsVar,double &vVar);
+    /*// constructor
+    Kalman(double &t0,
+           double &GPSguess,double &vguess,
+           double &gpsVar,double &vVar);*/
+    
+    void  intialize(double t0,
+                    double GPSguess,double vguess,
+                    double gpsVar,double vVar);
     // next estimation
-    vector<double> handleUpdate(double& t, double& x,double& y,
-                                    double& vx,double& vy,
-                                    double& ax,double& ay);
+    void handleUpdate(double t, double x,double y,
+                                double vx,double vy,
+                                double ax,double ay);
 
 };
 
 
 
-Kalman::Kalman(double &t0,double &GPSguess,double &vguess,
+/*Kalman::Kalman(double &t0,double &GPSguess,double &vguess,
                double &gpsVar,double &vVar){
     
     X<<GPSguess,GPSguess,vguess,vguess;
@@ -109,12 +114,37 @@ Kalman::Kalman(double &t0,double &GPSguess,double &vguess,
     Z*=0.1;
     Q*=0.1;
 
+}*/
+
+void Kalman::intialize(double t0,
+                       double GPSguess,double vguess,
+                       double gpsVar,double vVar){
+    dt=-1;                           
+    X<<GPSguess,GPSguess,vguess,vguess;
+    ti=t0;
+    // initialize the states and input coefficients matrix
+    A << 1,0,t0,0, 0,1,0,t0, 0,0,1,0, 0,0,0,1;
+    B << 0.5*t0*t0,0, 0,0.5*t0*t0, t0,0, 0,t0;
+    // errors coefficients matrix
+    
+    P << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
+    K= Matrix<double,4,4>::Zero();
+    
+    // noise model
+    //R << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
+    //Z.setRandom();
+    //Q.setRandom();
+    //Z*=0.1;
+    //Q*=0.1;
+
+    R=Matrix<double,4,4>::Identity();
+    Q=R;
 }
 
-vector<double> Kalman::handleUpdate(double& t, 
-                                    double& x,double& y,
-                                    double& vx,double& vy,
-                                    double& ax,double& ay){
+void Kalman::handleUpdate(double t, 
+                          double x,double y,
+                          double vx,double vy,
+                          double ax,double ay){
 
     /*
      * kalman filter algo goes here
@@ -151,9 +181,10 @@ vector<double> Kalman::handleUpdate(double& t,
         P=(Matrix<double,4,4>::Identity()-K)*P;
         // display result
         // clear vec 
-        vec.clear();
-        vec={X(0,0),X(1,0),X(2,0),X(3,0)};
-        return vec;
+        //vec.clear();
+        //vec={X(0,0),X(1,0),X(2,0),X(3,0)};
+        cout<<X.transpose()<<endl;
+        return; //vec;
         // next iteration for Xm,U
 }
 
