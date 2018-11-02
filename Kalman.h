@@ -127,8 +127,8 @@ void Kalman::intialize(double t0,
     B << 0.5*t0*t0,0, 0,0.5*t0*t0, t0,0, 0,t0;
     // errors coefficients matrix
     
-    P << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
-    K= Matrix<double,4,4>::Zero();
+    P << 500,0,0,0,0,500,0,0,0,0,100,0,0,0,0,100;
+    K=Matrix<double,4,4>::Zero();
     
     // noise model
     //R << gpsVar,0,0,0,0,gpsVar,0,0,0,0,vVar,0,0,0,0,vVar;
@@ -137,8 +137,11 @@ void Kalman::intialize(double t0,
     //Z*=0.1;
     //Q*=0.1;
 
-    R=Matrix<double,4,4>::Identity();
-    Q=R;
+    R<< gpsVar,0,0,0, 0,gpsVar,0,0, 0,0,1,0, 0,0,0,1;
+    Q<< sqrt(gpsVar),0,0,0, 0,sqrt(gpsVar),0,0, 0,0,1,0, 0,0,0,1;
+    //Q=Matrix<double,4,4>::Identity();
+    
+    
 }
 
 void Kalman::handleUpdate(double t, 
@@ -172,7 +175,7 @@ void Kalman::handleUpdate(double t,
         // predicted covariance P(i)=A*X(i-1)P^(-1)+Q;
         P=(A*P)*A.transpose()+Q;
         // measurment Input
-        Y=Xm+Z;
+        Y=Xm;//+Z;
         // kalman gain
         K=P*(P+R).inverse();
         // update states
@@ -184,6 +187,7 @@ void Kalman::handleUpdate(double t,
         //vec.clear();
         //vec={X(0,0),X(1,0),X(2,0),X(3,0)};
         cout<<X.transpose()<<endl;
+        //cout<<P<<endl;
         return; //vec;
         // next iteration for Xm,U
 }
